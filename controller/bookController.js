@@ -20,3 +20,13 @@ exports.getOccupiedSeats = async (req, res) => {
     }
 };
 
+exports.getAllBookingsController = async (req, res) => {
+    try {
+        // Fetch all bookings and populate user/event details if they are references
+        const allBookings = await book.find().sort({ createdAt: -1 });
+        res.status(200).json(allBookings);
+    } catch (err) {
+        res.status(500).json({ message: "Request failed", error: err });
+    }
+};
+

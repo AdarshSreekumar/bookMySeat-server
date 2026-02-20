@@ -5,23 +5,46 @@ const events=require('../model/eventModel')
 
 // Inside your addEvent controller
 exports.addEvent = async (req, res) => {
-    // Change 'title' to 'name' to match your model!
-    const { name, auditorium, date, time, userId } = req.body; 
-    const creatorId = req.payload; 
+    console.log("Inside addEvent Function");
+
+    // 1. Get text data from req.body
+    const { name, auditorium, date, time } = req.body;
+    
+    // 2. Get image filename from req.file (provided by Multer)
+    const eventImg = req.file ? req.file.filename : null;
+    
+    // 3. Get userId from jwtMiddleware (req.payload)
+    const userId = req.payload;
+
+    // Validation: Ensure all fields including image are present
+    if (!name || !auditorium || !date || !time || !eventImg || !userId) {
+        return res.status(406).json("Please fill the form completely and upload an image");
+    }
 
     try {
-        const newEvent = new events({
-            name,        // Matches your Schema
-            auditorium,  // Matches your Schema
-            date,
-            time,
-            status: "pending",
-            userId: creatorId 
-        });
-        await newEvent.save();
-        res.status(200).json(newEvent);
+        // Check if the same event already exists (optional check)
+        const existingEvent = await events.findOne({ name, date, auditorium });
+
+        if (existingEvent) {
+            res.status(406).json("This event is already scheduled at this time/place");
+        } else {
+            // 4. Create new event object with image
+            const newEvent = new events({
+                name, 
+                auditorium, 
+                date, 
+                time, 
+                eventImg, 
+                userId, 
+                status: "pending" // Initial status
+            });
+
+            // 5. Save to MongoDB
+            await newEvent.save();
+            res.status(200).json(newEvent);
+        }
     } catch (err) {
-        res.status(401).json(err);
+        res.status(401).json(`Error: ${err}`);
     }
 };
 
@@ -70,5 +93,17 @@ exports.getHomeEvents = async (req, res) => {
         res.status(200).json(approvedEvents);
     } catch (err) {
         res.status(500).json(err);
+    }
+};
+
+// delete an event
+// Delete an event
+exports.deleteEvent = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const removeEvent = await events.findByIdAndDelete({ _id: id });
+        res.status(200).json(removeEvent);
+    } catch (err) {
+        res.status(401).json(err);
     }
 };

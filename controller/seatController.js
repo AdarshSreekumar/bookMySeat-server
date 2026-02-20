@@ -3,6 +3,8 @@ const seats = require("../model/seatModel");
 const book = require('../model/bookModel');
 const users = require('../model/userModel');
 const events=require('../model/eventModel')
+const stripe = require('stripe')(process.env.STRIPESECRET);
+
 
 
 // fetch seats for event
@@ -84,5 +86,38 @@ exports.getAllSeatsForEvent = async (req, res) => {
         res.status(200).json(dynamicSeats);
     } catch (err) {
         res.status(500).json(err);
+    }
+};
+
+// payment
+exports.seatPaymentController = async (req, res) => {
+    // These must come from the frontend request body
+    const { title, price, picture, seatDetails } = req.body; 
+    
+    try {
+        const line_items = [{
+            price_data: {
+                currency: 'usd',
+                product_data: {
+                    name: title,
+                    images: [picture], // Stripe expects an array of strings
+                },
+                unit_amount: Math.round(price * 100) 
+            },
+            quantity: 1
+        }];
+
+        const session = await stripe.checkout.sessions.create({
+            line_items,
+            mode: 'payment',
+            success_url: 'http://localhost:5173/user/payment-success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url: 'http://localhost:5173/user/payment-failed',
+        });
+
+        // Send the URL back to the frontend
+        res.status(200).json({ url: session.url });
+        
+    } catch (error) {
+        res.status(500).json({ message: "Stripe Error", error });
     }
 };

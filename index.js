@@ -19,6 +19,8 @@ seatbookingServer.use(express.json())
 
 // use router in server
 seatbookingServer.use(router)
+
+seatbookingServer.use('/uploads', express.static('./uploads'));
 // create a port where server should listen in web
 const PORT=3000
 

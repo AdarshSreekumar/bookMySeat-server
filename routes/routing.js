@@ -6,6 +6,7 @@ const seatController=require('../controller/seatController')
 const adminController=require('../controller/adminController')
 const eventController=require('../controller/eventController')
 const bookController=require('../controller/bookController')
+const multerConfig=require('../middlewares/multerMiddleware')
 
 // create router object
 const router=new express.Router()
@@ -31,13 +32,19 @@ router.post('/book-seats',jwtMiddleware,seatController.bookSeats)
 // booked seats
 router.get('/user-bookings',jwtMiddleware,seatController.getUserBookings)
 
+// make payment
+router.post('/payment',jwtMiddleware,seatController.seatPaymentController)
+
 // -----------coordinator---------
 
 // Coordinator adds an event
-router.post('/add-event', jwtMiddleware, eventController.addEvent);
+router.post('/add-event', jwtMiddleware,multerConfig.single('eventImg'), eventController.addEvent);
 
 // Coordinator sees their own events
 router.get('/get-coordinator-events', jwtMiddleware, eventController.getCoordinatorEvents);
+
+// to see all bookings
+router.get('/all-bookings', jwtMiddleware, bookController.getAllBookingsController);
 
 
 
@@ -63,6 +70,9 @@ router.put('/approve-event/:id', jwtMiddleware, eventController.approveEvent);
 
 // get approved events at home
 router.get('/home-events', eventController.getHomeEvents);
+
+// Route to delete event
+router.delete('/event/remove/:id', jwtMiddleware, eventController.deleteEvent);
 
 // Route to get seats filtered by a specific Event ID
 router.get('/get-all-seats/:eventId', bookController.getOccupiedSeats);

@@ -17,6 +17,10 @@ const eventSchema=new mongoose.Schema({
       type: String,
       required: true
     },
+    eventImg: {
+        type: String,
+        required: true
+    },
     status: {
     type: String,
     default: "pending", // Default status when a coordinator adds it
